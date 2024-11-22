@@ -25,6 +25,13 @@ glimpse(data)
 summary(data)
 head(data)
 
+# Tabla de contingencia entre sexo y evento de muerte.
+contingency_table <- table(data$sex, data$death_event)
+
+# Porcentaje de hombres y mujeres fallecidos.
+prop_table <- prop.table(contingency_table, margin = 1)
+print(prop_table)
+
 # Correlación de Spearman de variables numéricas.
 correlations <- data %>%
   select(where(is.numeric)) %>%
@@ -36,7 +43,6 @@ cor_test <- cor.test(data$creatinine, data$sodium, method = "spearman")
 print(cor_test)
 
 # Ver distribución de edad por evento de muerte.
-table(data$sex, data$death_event)
 ggplot(data, aes(x = age, fill = death_event)) +
   geom_histogram(bins = 30, position = "dodge") +
   labs(title = "Distribución de eventos de muerte por edad", fill = "Evento de muerte") +
