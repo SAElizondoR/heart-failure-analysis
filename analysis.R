@@ -1,12 +1,10 @@
 # Bibliotecas necesarias.
 library(conflicted)
 library(tidyverse)
-library(ggplot2)
-library(dplyr)
-library(FactoMineR)
-library(factoextra)
+library(FactoMineR) # Análisis factorial.
+library(factoextra) # Visualización de análisis factorial.
 
-# Configuración de conflictos.
+# Configuración de preferencias para conflictos.
 conflict_prefer("filter", "dplyr")
 conflict_prefer("select", "dplyr")
 
@@ -16,9 +14,7 @@ data <- read.csv("dataset_edited.csv")
 # Identificar las columnas categóricas y convertirlas a factor.
 categorical_vars <- c("sex", "smoking", "diabetes", "high_blood_pressure",
                       "anaemia", "death_event")
-
-data <- data %>%
-  mutate(across(all_of(categorical_vars), as.factor))
+data[categorical_vars] <- lapply(data[categorical_vars], as.factor)
 
 # Inspección inicial.
 glimpse(data)
@@ -27,15 +23,14 @@ head(data)
 
 # Tabla de contingencia entre sexo y evento de muerte.
 contingency_table <- table(data$sex, data$death_event)
+print(contingency_table)
 
 # Porcentaje de hombres y mujeres fallecidos.
 prop_table <- prop.table(contingency_table, margin = 1)
 print(prop_table)
 
-# Correlación de Spearman de variables numéricas.
-correlations <- data %>%
-  select(where(is.numeric)) %>%
-  cor(method = "spearman")
+# Correlación de Spearman entre variables numéricas.
+correlations <- cor(select(data, where(is.numeric)), method = "spearman")
 print(correlations)
 
 # Correlación de Spearman entre creatinina y sodio sérico.
@@ -45,7 +40,8 @@ print(cor_test)
 # Ver distribución de edad por evento de muerte.
 ggplot(data, aes(x = age, fill = death_event)) +
   geom_histogram(bins = 30, position = "dodge") +
-  labs(title = "Distribución de eventos de muerte por edad", fill = "Evento de muerte") +
+  labs(title = "Distribución de eventos de muerte por edad",
+       fill = "Evento de muerte") +
   theme_minimal()
 
 # Comparación de edad entre fallecidos y sobrevivientes (Mann-Whitney).
@@ -57,17 +53,46 @@ kruskal_test <- kruskal.test(ejection_fraction ~ sex, data = data)
 print(kruskal_test)
 
 # Normalización de datos numéricos.
-scaled_data <- data %>%
-  select(creatinine, sodium, age, ejection_fraction) %>%
-  scale()
+scaled_data <- scale(select(data, creatinine, sodium, age, ejection_fraction))
 
 # Agrupamiento jerárquico (dendrograma).
-hclust_res <- hclust(dist(scaled_data, method = "euclidean"),
-                     method = "ward.D2")
+dist_matrix <- dist(scaled_data, method = "euclidean")
+hclust_res <- hclust(dist_matrix, method = "ward.D2")
 plot(hclust_res, labels = as.character(data$death_event),
-     main = "Dendrograma de agrupamiento")
+     main = "Dendrograma de agrupamiento", cex = 0.5)
 
-# Tabla de contingencia y prueba de ji al cuadrado: Fumar y evento de muerte.
+# Corte del dendrograma.
+num_clusters <- 6
+clusters <- cutree(hclust_res, k = num_clusters)
+
+# Agregar los grupos a la tabla original.
+data$cluster <- as.factor(clusters)
+
+# Ver cómo se distribuyen los eventos de muerte en los grupos.
+table(data$death_event, data$cluster)
+
+# Calcular el porcentaje de fallecidos por cada grupo.
+prop_fallecidos <- prop.table(table(data$death_event, data$cluster), margin = 2)
+print(prop_fallecidos)
+
+# Ver la distribución de mortalidad por grupo.
+ggplot(data, aes(x = cluster, fill = death_event)) +
+  geom_bar(position = "fill") +
+  labs(title = "Distribución de Mortalidad por Grupo", y = "Proporción") +
+  theme_minimal()
+
+# Prueba de ji al cuadrdo para ver si la mortalidad está asociada con los
+# grupos.
+chi_square_test <- chisq.test(table(data$death_event, data$cluster))
+print(chi_square_test)
+
+# Variables numéricas por grupo (ejemplo con creatinina).
+ggplot(data, aes(x = cluster, y = creatinine, fill = cluster)) +
+  geom_violin() +
+  labs(title = "Distribución de Creatinina por Grupo", y = "Creatinina")
+
+# Tabla de contingencia y prueba de ji al cuadrado: Tabaquismo y evento de
+# muerte.
 contingency_table <- table(data$smoking, data$death_event)
 chi_square_test <- chisq.test(contingency_table)
 print(contingency_table)
