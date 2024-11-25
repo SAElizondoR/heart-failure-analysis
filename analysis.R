@@ -4,6 +4,8 @@ library(tidyverse)
 library(FactoMineR) # Análisis factorial.
 library(factoextra) # Visualización de análisis factorial.
 
+setwd(dirname(getActiveDocumentContext()$path))
+
 # Configuración de preferencias para conflictos.
 conflict_prefer("filter", "dplyr")
 conflict_prefer("select", "dplyr")
