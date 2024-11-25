@@ -37,13 +37,13 @@ print(correlations)
 # Correlación de Spearman entre creatinina y sodio sérico.
 cor_test <- cor.test(data$creatinine, data$sodium, method = "spearman")
 print(cor_test)
-
 # Ver distribución de edad por evento de muerte.
 ggplot(data, aes(x = age, fill = death_event)) +
   geom_histogram(bins = 30, position = "dodge") +
   labs(title = "Distribución de eventos de muerte por edad",
        fill = "Evento de muerte") +
   theme_minimal()
+
 
 # Comparación de edad entre fallecidos y sobrevivientes (Mann-Whitney).
 mann_whitney <- wilcox.test(age ~ death_event, data = data)
@@ -77,10 +77,15 @@ prop_fallecidos <- prop.table(table(data$death_event, data$cluster), margin = 2)
 print(prop_fallecidos)
 
 # Ver la distribución de mortalidad por grupo.
-ggplot(data, aes(x = cluster, fill = death_event)) +
+ggplot(data, aes(x = cluster, fill = factor(death_event))) +  # Mapeamos como factor
   geom_bar(position = "fill") +
-  labs(title = "Distribución de Mortalidad por Grupo", y = "Proporción") +
+  labs(title = "Distribución de Mortalidad por Grupo", y = "Proporción", fill = "Estado de Mortalidad") +  # Cambiar el título de la leyenda
+  scale_fill_manual(
+    values = c("0" = "lightblue", "1" = "blue"),  # Colores para 0 y 1
+    labels = c("0" = "No Muerto", "1" = "Muerto")  # Etiquetas personalizadas
+  ) +
   theme_minimal()
+
 
 # Prueba de ji al cuadrdo para ver si la mortalidad está asociada con los
 # grupos.
