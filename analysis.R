@@ -1,10 +1,9 @@
 # Bibliotecas necesarias.
-library(conflicted)
-library(tidyverse)
-library(FactoMineR) # Análisis factorial.
-library(factoextra) # Visualización de análisis factorial.
-
-setwd(dirname(getActiveDocumentContext()$path))
+packages <- c("dplyr","tidyverse", "janitor", 
+              "ggplot2", "conflicted","FactoMineR",#analisis factorial
+              "factoextra")# Visualización de análisis factorial.
+pacman::p_load( packages , character.only = TRUE )
+rm(packages)
 
 # Configuración de preferencias para conflictos.
 conflict_prefer("filter", "dplyr")
