@@ -8,6 +8,7 @@ rm(packages)
 # Configuración de preferencias para conflictos.
 conflict_prefer("filter", "dplyr")
 conflict_prefer("select", "dplyr")
+conflicts_prefer(janitor::chisq.test)
 
 # Carga de datos.
 data <- read.csv("dataset_edited.csv")
@@ -46,12 +47,46 @@ ggplot(data, aes(x = age, fill = death_event)) +
 
 
 # Comparación de edad entre fallecidos y sobrevivientes (Mann-Whitney).
+
+#H0: No hay diferencia entre las edades de fallecidos y sobrevivientes
+#Ha: Hay diferencia entre las edades de fallecidos y sobrevivientes
 mann_whitney <- wilcox.test(age ~ death_event, data = data)
 print(mann_whitney)
+#p-valor= 0.00017
+#Se rechaza la hipotesis nula
+
+#La edad sí es relevante para determinar la fatalidad de los casos.
+
+#Distribucion de Edad por sexos en nuestros pacientes.
+ggplot(data, aes(x = sex, y = age, fill = as.factor(sex))) +
+  geom_boxplot() +
+  labs(title = "Distribución de Edad por Sexo", x = "Sexo", y = "Edad", fill = "") +
+  scale_x_discrete(labels = c("0" = "Mujer", "1" = "Hombre")) +  
+  scale_fill_manual(values = c("0" = "salmon", "1" = "lightblue3"), 
+                    labels = c("0" = "Mujer", "1" = "Hombre")) +  
+  theme_minimal()
+
+#H0: No hay diferencia entre las edades de hombres y mujeres pacientes
+#Ha: Hay diferencia entre las edades de hombres y mujeres pacientes
+mann_whitney_edad_por_Sex <- wilcox.test(age ~ sex, data = data)
+mann_whitney_edad_por_Sex
+#p-valor= 0.3188
+#No se rechaza la hipotesis nula
+#No hay diferencia entre las edades de hombres y mujeres pacientes
+
 
 # Comparación de fracción de eyección entre sexos (Kruskal-Wallis).
+
+#H0: La fracción de eyección no varía entre sexos
+#Ha: La fracción de eyección varía entre sexos
 kruskal_test <- kruskal.test(ejection_fraction ~ sex, data = data)
 print(kruskal_test)
+
+#p-valor= 0.024
+#Se rechaza la hipotesis nula
+
+#La fracción de eyección sí varía entre sexos.
+
 
 # Normalización de datos numéricos.
 scaled_data <- scale(select(data, creatinine, sodium, age, ejection_fraction))
@@ -77,20 +112,26 @@ prop_fallecidos <- prop.table(table(data$death_event, data$cluster), margin = 2)
 print(prop_fallecidos)
 
 # Ver la distribución de mortalidad por grupo.
-ggplot(data, aes(x = cluster, fill = factor(death_event))) +  # Mapeamos como factor
+ggplot(data, aes(x = cluster, fill = factor(death_event))) +
   geom_bar(position = "fill") +
-  labs(title = "Distribución de Mortalidad por Grupo", y = "Proporción", fill = "Estado de Mortalidad") +  # Cambiar el título de la leyenda
+  labs(title = "Distribución de Mortalidad por Grupo", y = "Proporción", fill = "Estado de Mortalidad") + 
   scale_fill_manual(
-    values = c("0" = "lightblue", "1" = "blue"),  # Colores para 0 y 1
-    labels = c("0" = "No Muerto", "1" = "Muerto")  # Etiquetas personalizadas
+    values = c("0" = "lightblue", "1" = "blue"),  
+    labels = c("0" = "No Muerto", "1" = "Muerto")
   ) +
   theme_minimal()
 
 
 # Prueba de ji al cuadrdo para ver si la mortalidad está asociada con los
 # grupos.
+
+#H0: La frecuencia de muertes no esta relacionada con el cluster asignado
+#Ha: La frecuencia de muertes se relaciona con el cluster asignado
 chi_square_test <- chisq.test(table(data$death_event, data$cluster))
 print(chi_square_test)
+#p-valor= 1.92 x 10^-6
+#Se rechaza la hipotesis nula
+#La frecuencia de muertes varía entre grupos
 
 # Variables numéricas por grupo (ejemplo con creatinina).
 ggplot(data, aes(x = cluster, y = creatinine, fill = cluster)) +
@@ -100,9 +141,15 @@ ggplot(data, aes(x = cluster, y = creatinine, fill = cluster)) +
 # Tabla de contingencia y prueba de ji al cuadrado: Tabaquismo y evento de
 # muerte.
 contingency_table <- table(data$smoking, data$death_event)
+
+#H0: La frecuencia de muertes no esta relacionada con fumar
+#Ha: La frecuencia de muertes se relaciona con fumar
 chi_square_test <- chisq.test(contingency_table)
 print(contingency_table)
 print(chi_square_test)
+#p-valor= 0.93
+#No se rechaza la hipotesis nula
+#La frecuencia de muertes NO se relaciona con ser o no fumador
 
 # Análisis factorial de datos mixtos (FAMD).
 famd_res = FAMD(data, graph = TRUE)
