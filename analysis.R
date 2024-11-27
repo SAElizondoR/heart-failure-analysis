@@ -23,6 +23,7 @@ glimpse(data)
 summary(data)
 head(data)
 
+
 # Tabla de contingencia entre sexo y evento de muerte.
 contingency_table <- table(data$sex, data$death_event)
 print(contingency_table)
@@ -152,6 +153,24 @@ print(chi_square_test)
 #No se rechaza la hipotesis nula
 #La frecuencia de muertes NO se relaciona con ser o no fumador
 
+
+#Diferencias en Indices Sanguineos
+indices <- c("sodium", "creatinine", "CPK", "platelets")
+results <- list()
+for (var in indices) {
+  mann_whitney_indice <- wilcox.test(data[[var]] ~ data$death_event)
+  results[[var]] <- list(
+    p_value = mann_whitney_indice$p.value,
+    interpretation = ifelse(mann_whitney_indice$p.value < 0.05, 
+                            "Hay una diferencia significativa.",
+                            "No hay diferencia significativa."))}
+for (var in indices) {
+  cat("\nVariable:", var, "\n")
+  cat("Valor p:", results[[var]]$p_value, "\n")
+  cat("Interpretación:", results[[var]]$interpretation, "\n")
+}
+
+
 # Análisis factorial de datos mixtos (FAMD).
 famd_res = FAMD(data, graph = TRUE)
 fviz_famd_var(famd_res, repel = TRUE, ggtheme = theme_minimal())
@@ -165,6 +184,7 @@ summary_table <- tibble(
     format(scientific = TRUE)
 )
 print(summary_table)
+
 
 
 #Árbol de decisión
