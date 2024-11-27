@@ -35,6 +35,7 @@ print(prop_table)
 correlations <- cor(select(data, where(is.numeric)), method = "spearman")
 print(correlations)
 
+
 # Correlación de Spearman entre creatinina y sodio sérico.
 cor_test <- cor.test(data$creatinine, data$sodium, method = "spearman")
 print(cor_test)
