@@ -1,5 +1,5 @@
 # Bibliotecas necesarias.
-packages <- c("dplyr","tidyverse", "janitor", 
+packages <- c("dplyr","tidyverse", "janitor",
               "ggplot2", "conflicted","FactoMineR",#analisis factorial
               "factoextra")# Visualización de análisis factorial.
 pacman::p_load( packages , character.only = TRUE )
@@ -165,3 +165,25 @@ summary_table <- tibble(
     format(scientific = TRUE)
 )
 print(summary_table)
+
+
+#Árbol de decisión
+tree_model <- rpart(death_event ~ age + sex + smoking + creatinine + ejection_fraction+diabetes+high_blood_pressure+anaemia+sodium+platelets+CPK,
+                    data = data, method = "class")
+rpart.plot(tree_model)
+
+# Matriz de Confusión
+pred_tree <- predict(tree_model, type = "class")
+table(pred_tree, data$death_event)
+#Accuracy 82.5%
+
+#Random Forest
+
+library(randomForest)
+
+rf_model <- randomForest(death_event ~ age + sex + smoking + creatinine + ejection_fraction+diabetes+high_blood_pressure+anaemia+sodium+platelets+CPK,
+                         data = data, ntree = 100)
+print(rf_model) #74.6% de rendimiento
+importance(rf_model)
+
+
