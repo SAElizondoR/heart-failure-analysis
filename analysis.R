@@ -1,5 +1,5 @@
 # Bibliotecas necesarias.
-packages <- c("dplyr","tidyverse", "janitor",
+packages <- c("dplyr","tidyverse", "janitor","reshape2","RColorBrewer",
               "ggplot2", "conflicted","FactoMineR",#analisis factorial
               "factoextra")# Visualización de análisis factorial.
 pacman::p_load( packages , character.only = TRUE )
@@ -33,9 +33,21 @@ prop_table <- prop.table(contingency_table, margin = 1)
 print(prop_table)
 
 # Correlación de Spearman entre variables numéricas.
-correlations <- cor(select(data, where(is.numeric)), method = "spearman")
+correlations <- cor(select((data%>%select(-time)), where(is.numeric)), method = "spearman")
 print(correlations)
 
+correlations_melted <- melt(round(correlations,3))
+ggplot(correlations_melted, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() + 
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, 
+                       limits = c(-1, 1), name = "Correlación") + 
+  geom_text(aes(label = value), color = "black", size = 4) + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text.y = element_text(angle = 0, hjust = 1),   
+        plot.title = element_text(hjust = 0.5)) + 
+  labs(title = "Correlaciones de Spearman") +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
 
 # Correlación de Spearman entre creatinina y sodio sérico.
 cor_test <- cor.test(data$creatinine, data$sodium, method = "spearman")
