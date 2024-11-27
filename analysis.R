@@ -1,5 +1,5 @@
 # Bibliotecas necesarias.
-packages <- c("dplyr","tidyverse", "janitor","reshape2","RColorBrewer",
+packages <- c("dplyr","tidyverse", "janitor","reshape2","RColorBrewer","rpart.plot",
               "ggplot2", "conflicted","FactoMineR",#analisis factorial
               "factoextra")# Visualización de análisis factorial.
 pacman::p_load( packages , character.only = TRUE )
@@ -57,6 +57,7 @@ ggplot(data, aes(x = age, fill = death_event)) +
   geom_histogram(bins = 30, position = "dodge") +
   labs(title = "Distribución de eventos de muerte por edad",
        fill = "Evento de muerte") +
+  scale_fill_manual(values = c("0" = "green4", "1" = "blue")) +
   theme_minimal()
 
 
@@ -101,6 +102,14 @@ print(kruskal_test)
 
 #La fracción de eyección sí varía entre sexos.
 
+ggplot(data, aes(x = as.factor(sex), y = ejection_fraction, fill = as.factor(sex))) +
+  geom_boxplot() +
+  labs(title = "Distribución de la Fracción de Eyección por Sexo",
+       x = "Sexo",
+       y = "Fracción de Eyección") +
+  scale_x_discrete(labels = c("0" = "Mujer", "1" = "Hombre")) +
+  scale_fill_manual(values = c("0" = "coral", "1" = "lightblue4")) +
+  theme_minimal()
 
 # Normalización de datos numéricos.
 scaled_data <- scale(select(data, creatinine, sodium, age, ejection_fraction))
@@ -117,9 +126,6 @@ clusters <- cutree(hclust_res, k = num_clusters)
 
 # Agregar los grupos a la tabla original.
 data$cluster <- as.factor(clusters)
-
-# Ver cómo se distribuyen los eventos de muerte en los grupos.
-table(data$death_event, data$cluster)
 
 # Calcular el porcentaje de fallecidos por cada grupo.
 prop_fallecidos <- prop.table(table(data$death_event, data$cluster), margin = 2)
@@ -147,10 +153,13 @@ print(chi_square_test)
 #Se rechaza la hipotesis nula
 #La frecuencia de muertes varía entre grupos
 
-# Variables numéricas por grupo (ejemplo con creatinina).
+# Variables numéricas por grupo
 ggplot(data, aes(x = cluster, y = creatinine, fill = cluster)) +
   geom_violin() +
   labs(title = "Distribución de Creatinina por Grupo", y = "Creatinina")
+ggplot(data, aes(x = cluster, y = sodium, fill = cluster)) +
+  geom_violin() +
+  labs(title = "Distribución de Sodio por Grupo", y = "Sodio")
 
 # Tabla de contingencia y prueba de ji al cuadrado: Tabaquismo y evento de
 # muerte.
@@ -164,6 +173,26 @@ print(chi_square_test)
 #p-valor= 0.93
 #No se rechaza la hipotesis nula
 #La frecuencia de muertes NO se relaciona con ser o no fumador
+
+#H0: La frecuencia de muertes no esta relacionada con diabetes
+#Ha: La frecuencia de muertes se relaciona con diabetes
+contingency_table <- table(data$diabetes, data$death_event)
+chi_square_test <- chisq.test(contingency_table)
+print(contingency_table)
+print(chi_square_test)
+#p-valor= 1
+#Se rechaza la hipotesis nula
+#La frecuencia de muertes NO se relaciona con ser diabético
+
+#H0: La frecuencia de muertes no esta relacionada con la anemia
+#Ha: La frecuencia de muertes se relaciona con la anemia
+contingency_table <- table(data$anaemia, data$death_event)
+chi_square_test <- chisq.test(contingency_table)
+print(contingency_table)
+print(chi_square_test)
+#p-valor= 0.3
+#Se rechaza la hipotesis nula
+#La frecuencia de muertes NO se relaciona con ser anémico
 
 
 #Diferencias en Indices Sanguineos
@@ -181,6 +210,14 @@ for (var in indices) {
   cat("Valor p:", results[[var]]$p_value, "\n")
   cat("Interpretación:", results[[var]]$interpretation, "\n")
 }
+muertos <- data %>% filter(death_event == 1)
+vivos <- data %>% filter(death_event == 0)
+mann_whitney_sodium <- wilcox.test(muertos$sodium,vivos$sodium, paired=FALSE, alternative = "less")
+print(mann_whitney_sodium)
+#El sodio es menor en pacientes fallecidos
+mann_whitney_creatinine <- wilcox.test(muertos$creatinine,vivos$creatinine, paired=FALSE, alternative = "greater")
+print(mann_whitney_creatinine)
+#La creatinina es mayor en pacientes fallecidos
 
 
 # Análisis factorial de datos mixtos (FAMD).
