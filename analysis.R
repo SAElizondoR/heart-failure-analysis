@@ -181,7 +181,7 @@ chi_square_test <- chisq.test(contingency_table)
 print(contingency_table)
 print(chi_square_test)
 #p-valor= 1
-#Se rechaza la hipotesis nula
+#Noe rechaza la hipotesis nula
 #La frecuencia de muertes NO se relaciona con ser diabético
 
 #H0: La frecuencia de muertes no esta relacionada con la anemia
@@ -191,8 +191,18 @@ chi_square_test <- chisq.test(contingency_table)
 print(contingency_table)
 print(chi_square_test)
 #p-valor= 0.3
-#Se rechaza la hipotesis nula
+#No se rechaza la hipotesis nula
 #La frecuencia de muertes NO se relaciona con ser anémico
+
+#H0: La frecuencia de muertes no esta relacionada al sexo
+#Ha: La frecuencia de muertes se relaciona con el sexo
+contingency_table <- table(data$sex, data$death_event)
+chi_square_test <- chisq.test(contingency_table)
+print(contingency_table)
+print(chi_square_test)
+#p-valor= 1
+#No se rechaza la hipotesis nula
+#La frecuencia de muertes NO se relaciona con ser hombre o mujer
 
 
 #Diferencias en Indices Sanguineos
